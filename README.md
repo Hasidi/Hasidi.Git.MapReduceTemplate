@@ -1,0 +1,1 @@
+# Hasidi.Git.MapReduceTemplate
