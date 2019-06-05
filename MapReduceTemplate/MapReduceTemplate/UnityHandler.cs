@@ -67,7 +67,7 @@ namespace MapReduceTemplate
 
             _unityContainer.RegisterType<MapReduceManager<string, int, double, double>>(
                 new InjectionConstructor(
-                    "ratings.csv", 12, 7, blockingCollection,
+                    @"Files\demo.csv", 7, 7, blockingCollection,
                         _unityContainer.Resolve<IComponentsFactory>(),
                         _unityContainer.Resolve<IDataReader<string>>())
             );
