@@ -8,7 +8,7 @@ namespace MapReduceTemplate
 {
     public interface IMapper<TKey, TValue>
     {
-        Task<int> StartMapping();
+        int StartMapping();
         Dictionary<TKey, List<TValue>> GetData();
         int GetId();
     }
@@ -41,10 +41,10 @@ namespace MapReduceTemplate
             Interlocked.Add(ref nMappers, 1);
         }
 
-        public Task<int> StartMapping()
+        public int StartMapping()
         {
-            return Task.Run(() =>
-            {
+            //return Task.Run(() =>
+            //{
                 _mappingData = new Dictionary<TKey, List<TValue>>();
                 _isFinished = false;
                 Logger.LogInfo($"---Mapper[{_mapperId}] started work");
@@ -74,7 +74,7 @@ namespace MapReduceTemplate
                 _isFinished = true;
                 Logger.LogInfo($"======Mapper[{_mapperId}] finish working");
                 return _mapperId;
-            });
+            //});
 
         }
 

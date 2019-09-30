@@ -9,7 +9,7 @@ namespace MapReduceTemplate
     public interface IReducer<TKey, TValue, TOut>
     {
         void Feed(TKey key, List<TValue> values);
-        Task<SortedDictionary<TKey, TOut>> StartReducing();
+        SortedDictionary<TKey, TOut> StartReducing();
         SortedDictionary<TKey, TOut> GetData();
         Dictionary<TKey, TOut> SyncReducing(Dictionary<TKey, List<TValue>> toReduceCollection);
     }
@@ -48,10 +48,10 @@ namespace MapReduceTemplate
             }
         }
 
-        public Task<SortedDictionary<TKey, TOut>> StartReducing()
+        public SortedDictionary<TKey, TOut> StartReducing()
         {
-            return Task.Run(() =>
-            {
+            //return Task.Run(() =>
+            //{
                 Logger.LogInfo($"---Reducer[{_reducerId}] has started work");
                 foreach (var keyValues in _reducerBuffer)
                 {
@@ -61,7 +61,7 @@ namespace MapReduceTemplate
                 }
                 Logger.LogInfo($"Reducer[{_reducerId}] has finished work");
                 return _reducedData;
-            });
+            //});
         }
 
         public SortedDictionary<TKey, TOut> GetData()

@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -19,6 +20,11 @@ namespace MapReduceTemplate
         private IMapper<TKey, TValue>[] _mappers;
         private IShuffler<TKey, TValue, TOut>[] _shufflers;
         private IReducer<TKey, TValue, TOut>[] _reducers;
+
+        private ConcurrentBag<IMapper<TKey, TValue>> _mappersList;
+        private ConcurrentBag<IShuffler<TKey, TValue, TOut>> _shufflersList;
+        private ConcurrentBag<IReducer<TKey, TValue, TOut>> _reducersList;
+
 
         private static readonly ILogger Logger = UnityHandler.GetInstance<ILogger>();
 
@@ -76,28 +82,39 @@ namespace MapReduceTemplate
 
         private void _RunMappers()
         {
-            var tasks = new List<Task>();
-            foreach (var mapper in _mappers)
+
+            Parallel.ForEach(_mappers, (mapper) =>
             {
                 Logger.LogInfo($"mapper[{mapper.GetId()}] function was invoked");
-                var mapperTask = mapper.StartMapping();
-                //tasks.Add(mapperTask);
-                var shuffleTask = mapperTask.ContinueWith( (mapRes) =>
-                {
-                    var mapperId = mapRes.Result;
-                    var data = _mappers[mapperId].GetData();
-                    //_shufflers[mapperId].Shuffle(mapperId, data, _reducers).Wait();
-                    _shufflers[mapperId].Shuffle(mapperId, data, _reducers);
-                });
-                tasks.Add(shuffleTask);
-            }
-            Task.WaitAll(tasks.ToArray());
+                var mapperId = mapper.StartMapping();
+                var data = _mappers[mapperId].GetData();
+                _shufflers[mapperId].Shuffle(mapperId, data, _reducers);
+            });
+
+            //var tasks = new List<Task>();
+            //foreach (var mapper in _mappers)
+            //{
+            //    Logger.LogInfo($"mapper[{mapper.GetId()}] function was invoked");
+            //    var mapperTask = mapper.StartMapping();
+            //    //tasks.Add(mapperTask);
+            //    var shuffleTask = mapperTask.ContinueWith( (mapRes) =>
+            //    {
+            //        var mapperId = mapRes.Result;
+            //        var data = _mappers[mapperId].GetData();
+            //        //_shufflers[mapperId].Shuffle(mapperId, data, _reducers).Wait();
+            //        _shufflers[mapperId].Shuffle(mapperId, data, _reducers);
+            //    });
+            //    tasks.Add(shuffleTask);
+            //}
+            //Task.WaitAll(tasks.ToArray());
         }
 
         private Dictionary<TKey, TOut> _RunReducers()
         {
-            var tasks = _reducers.Select(r => r.StartReducing());
-            Task.WaitAll(tasks.ToArray());
+            Parallel.ForEach(_reducers, (reducer) => { reducer.StartReducing(); });
+
+            //var tasks = _reducers.AsParallel().Select(r => r.StartReducing());
+            //Task.WaitAll(tasks.ToArray());
 
             //concat results
             var res = _reducers.SelectMany(x => x.GetData()).ToDictionary(x => x.Key, x => x.Value);
